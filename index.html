@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LINE 訊息管理系統</title>
+  <title>LINEメッセージ管理システム</title>
   <!-- 引入 LINE LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* 基本樣式與先前相同 */
+    /* 基本樣式 */
     body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
     .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     h2 { text-align: center; color: #333; margin-top: 5px; }
@@ -44,23 +44,23 @@
 <body>
 
 <div class="container">
-  <h2>LINE 訊息管理系統</h2>
+  <h2>LINEメッセージ管理システム</h2>
   
   <!-- 狀態提示 -->
-  <div id="status-msg" class="loading">正在初始化系統...</div>
+  <div id="status-msg" class="loading">システムを初期化しています...</div>
 
   <!-- 註冊區塊 -->
   <div id="register-section" class="hidden">
-    <p style="text-align:center; color:#555;">第一次登入請驗證身分綁定 LINE 帳號</p>
+    <p style="text-align:center; color:#555;">初回ログインです。本人確認を行い、LINEアカウントを連携してください</p>
     <div class="form-group">
-      <label>姓名</label>
-      <input type="text" id="reg-name" placeholder="請輸入試算表中的姓名">
+      <label>氏名</label>
+      <input type="text" id="reg-name" placeholder="スプレッドシートに登録されている氏名を入力">
     </div>
     <div class="form-group">
-      <label>電話</label>
-      <input type="tel" id="reg-phone" placeholder="請輸入試算表中的電話">
+      <label>電話番号</label>
+      <input type="tel" id="reg-phone" placeholder="スプレッドシートに登録されている電話番号を入力">
     </div>
-    <button class="primary-btn" onclick="submitRegister()">綁定身分</button>
+    <button class="primary-btn" onclick="submitRegister()">連携する</button>
     <div id="reg-error" class="error-msg"></div>
   </div>
 
@@ -90,13 +90,13 @@
         verifyUser();
       }
     } catch (err) {
-      document.getElementById('status-msg').innerText = "LINE 登入初始化失敗。";
+      document.getElementById('status-msg').innerText = "LINEログインの初期化に失敗しました。";
     }
   }
 
   // 2. 驗證身分 (呼叫 GAS 檢查 M 欄)
   async function verifyUser() {
-    document.getElementById('status-msg').innerText = "驗證身分中...";
+    document.getElementById('status-msg').innerText = "本人確認中...";
     try {
       const res = await fetch(`${API_URL}?action=verifyLogin&lineId=${currentLineId}`);
       const data = await res.json();
@@ -110,7 +110,7 @@
         document.getElementById('register-section').classList.remove('hidden');
       }
     } catch (err) {
-      document.getElementById('status-msg').innerText = "驗證過程發生錯誤。";
+      document.getElementById('status-msg').innerText = "確認処理中にエラーが発生しました。";
     }
   }
 
@@ -121,11 +121,11 @@
     const errorDiv = document.getElementById('reg-error');
 
     if (!name || !phone) {
-      errorDiv.innerText = "請填寫完整姓名與電話";
+      errorDiv.innerText = "氏名と電話番号をすべて入力してください。";
       return;
     }
     
-    errorDiv.innerText = "綁定中，請稍候...";
+    errorDiv.innerText = "連携処理中です。お待ちください...";
     try {
       const res = await fetch(`${API_URL}?action=register&lineId=${currentLineId}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`);
       const data = await res.json();
@@ -138,31 +138,31 @@
         errorDiv.innerText = data.message;
       }
     } catch (err) {
-      errorDiv.innerText = "網路連線異常，請稍後再試。";
+      errorDiv.innerText = "通信エラーが発生しました。後でもう一度お試しください。";
     }
   }
 
   // 4. 讀取未完成訊息
   async function loadMessages() {
     const list = document.getElementById('message-list');
-    list.innerHTML = "<div class='loading'>載入資料中...</div>";
+    list.innerHTML = "<div class='loading'>データを読み込んでいます...</div>";
     
     try {
       const res = await fetch(`${API_URL}?action=getData`);
       const data = await res.json();
       renderList(data);
     } catch (err) {
-      list.innerHTML = "<div class='error-msg'>載入失敗</div>";
+      list.innerHTML = "<div class='error-msg'>読み込みに失敗しました。</div>";
     }
   }
 
-  // 5. 渲染訊息清單與打勾功能 (與上一版相同)
+  // 5. 渲染訊息清單與打勾功能
   function renderList(data) {
     const list = document.getElementById('message-list');
     list.innerHTML = "";
 
     if (data.length === 0) {
-      list.innerHTML = "<p style='text-align:center; color:#888;'>目前沒有待處理的訊息！🎉</p>";
+      list.innerHTML = "<p style='text-align:center; color:#888;'>現在未処理のメッセージはありません！🎉</p>";
       return;
     }
 
@@ -174,7 +174,7 @@
       let translationHtml = item.translation;
       if(translationHtml.includes("HYPERLINK")) {
         const match = translationHtml.match(/HYPERLINK\("([^"]+)"/);
-        if(match) translationHtml = `<a href="${match[1]}" target="_blank">點此查看圖片</a>`;
+        if(match) translationHtml = `<a href="${match[1]}" target="_blank">写真を見る</a>`;
       }
 
       card.innerHTML = `
@@ -193,14 +193,14 @@
     const card = document.getElementById(`row-${row}`);
     const btn = card.querySelector('.check-btn');
     card.style.opacity = "0.5";
-    btn.innerText = "處理中...";
+    btn.innerText = "処理中...";
     btn.disabled = true;
 
     try {
       await fetch(`${API_URL}?action=checkRow&row=${row}`);
       card.style.display = "none";
     } catch (err) {
-      alert("更新失敗，請稍後再試。");
+      alert("更新に失敗しました。後でもう一度お試しください。");
       card.style.opacity = "1";
       btn.innerText = "✔ 既読する";
       btn.disabled = false;
