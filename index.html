@@ -2,128 +2,164 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <!-- 這行很重要：告訴手機瀏覽器要符合設備寬度，不要縮放比例 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LINE 訊息管理後台</title>
+  <title>LINE 訊息管理系統</title>
+  <!-- 引入 LINE LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* ================= 基本與桌機版樣式 ================= */
-    body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      background: #f4f7f6; 
-      margin: 0; 
-      padding: 20px; 
-    }
-    .container { 
-      max-width: 800px; 
-      margin: 0 auto; 
-      background: white; 
-      padding: 20px; 
-      border-radius: 10px; 
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-    }
-    h2 { 
-      text-align: center; 
-      color: #333; 
-      margin-top: 5px;
-    }
-    .loading { 
-      text-align: center; 
-      color: #666; 
-      padding: 20px 0;
-    }
-
-    /* 卡片設計 */
-    .message-card { 
-      border: 1px solid #ddd; 
-      padding: 15px; 
-      margin-bottom: 12px; 
-      border-radius: 8px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      transition: opacity 0.3s; 
-      gap: 15px;
-    }
+    /* 基本樣式與先前相同 */
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; margin-top: 5px; }
+    .loading { text-align: center; color: #666; padding: 20px 0; font-size: 1.1em; }
     
-    /* 內容區塊 */
-    .content { 
-      flex-grow: 1; 
-      /* 防止過長的網址或連續字母撐破卡片 */
-      word-wrap: break-word; 
-      word-break: break-word;
-    }
+    /* 區塊隱藏 */
+    .hidden { display: none !important; }
+
+    /* 註冊表單樣式 */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+    .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+    .primary-btn { width: 100%; background: #00B900; color: white; border: none; padding: 14px; border-radius: 6px; font-size: 1.1em; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .primary-btn:hover { background: #009900; }
+    .error-msg { color: red; text-align: center; margin-top: 10px; font-weight: bold; }
+
+    /* 訊息卡片樣式 */
+    .message-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: opacity 0.3s; gap: 15px; }
+    .content { flex-grow: 1; word-wrap: break-word; word-break: break-word; }
     .time { font-size: 0.85em; color: #888; white-space: pre-line; }
     .text { font-size: 1.15em; margin: 8px 0; font-weight: bold; color: #111; }
     .translation { color: #0056b3; font-size: 0.95em; }
     .translation a { color: #0056b3; text-decoration: none; font-weight: bold; }
-    .translation a:hover { text-decoration: underline; }
+    .check-btn { background: #28a745; color: white; border: none; padding: 10px 18px; border-radius: 5px; cursor: pointer; font-size: 1em; flex-shrink: 0; }
 
-    /* 按鈕設計 */
-    .check-btn { 
-      background: #28a745; 
-      color: white; 
-      border: none; 
-      padding: 10px 18px; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      font-size: 1em; 
-      flex-shrink: 0;
-      transition: background 0.2s;
-    }
-    .check-btn:hover { background: #218838; }
-
-    /* ================= 手機版專屬樣式 ================= */
     @media (max-width: 600px) {
-      body { 
-        padding: 10px; /* 縮小兩側留白，把空間還給內容 */
-      }
-      .container { 
-        padding: 15px; 
-      }
-      .message-card { 
-        flex-direction: column; /* 把排版從左右改成上下 */
-        align-items: stretch;   /* 讓裡面的元素自動撐滿寬度 */
-      }
-      .check-btn { 
-        width: 100%;            /* 按鈕變成 100% 寬度 */
-        padding: 14px;          /* 增加按鈕高度，讓大拇指更好按 */
-        font-size: 1.1em;       /* 按鈕字體稍微放大 */
-        margin-top: 10px;       /* 和上方的文字拉開距離 */
-        border-radius: 8px;
-      }
+      body { padding: 10px; }
+      .container { padding: 15px; }
+      .message-card { flex-direction: column; align-items: stretch; }
+      .check-btn { width: 100%; padding: 14px; font-size: 1.1em; margin-top: 10px; }
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>待處理訊息清單</h2>
-  <div id="loading" class="loading">載入資料中，請稍候...</div>
-  <div id="message-list"></div>
+  <h2>LINE 訊息管理系統</h2>
+  
+  <!-- 狀態提示 -->
+  <div id="status-msg" class="loading">正在初始化系統...</div>
+
+  <!-- 註冊區塊 -->
+  <div id="register-section" class="hidden">
+    <p style="text-align:center; color:#555;">第一次登入請驗證身分綁定 LINE 帳號</p>
+    <div class="form-group">
+      <label>姓名</label>
+      <input type="text" id="reg-name" placeholder="請輸入試算表中的姓名">
+    </div>
+    <div class="form-group">
+      <label>電話</label>
+      <input type="tel" id="reg-phone" placeholder="請輸入試算表中的電話">
+    </div>
+    <button class="primary-btn" onclick="submitRegister()">綁定身分</button>
+    <div id="reg-error" class="error-msg"></div>
+  </div>
+
+  <!-- 主系統區塊 -->
+  <div id="main-section" class="hidden">
+    <div id="message-list"></div>
+  </div>
 </div>
 
 <script>
-  // ================= 替換成你的 GAS 網頁應用程式網址 =================
-  const API_URL = "https://script.google.com/macros/s/AKfycbywNj83P6FrKQBUOIJGZL6UB-847AmsA5EmZKm6aImTUfstIVgQvnXzrObFYeM7O97v/exec"; 
-  // ================================================================
+  // ================= 設定區 =================
+  const API_URL = "請將你的GAS網頁應用程式網址貼在這裡"; 
+  const LIFF_ID = "請將第一步取得的LIFF_ID貼在這裡"; 
+  // ==========================================
 
-  // 1. 取得資料
-  async function fetchData() {
+  let currentLineId = "";
+
+  // 1. 初始化 LIFF
+  async function initLiff() {
     try {
-      const response = await fetch(`${API_URL}?action=getData`);
-      const data = await response.json();
-      renderList(data);
-    } catch (error) {
-      document.getElementById('loading').innerText = "載入失敗，請檢查網址或網路狀態。";
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) {
+        liff.login(); // 喚起 LINE 登入
+      } else {
+        const profile = await liff.getProfile();
+        currentLineId = profile.userId;
+        verifyUser();
+      }
+    } catch (err) {
+      document.getElementById('status-msg').innerText = "LINE 登入初始化失敗。";
     }
   }
 
-  // 2. 渲染畫面
+  // 2. 驗證身分 (呼叫 GAS 檢查 M 欄)
+  async function verifyUser() {
+    document.getElementById('status-msg').innerText = "驗證身分中...";
+    try {
+      const res = await fetch(`${API_URL}?action=verifyLogin&lineId=${currentLineId}`);
+      const data = await res.json();
+      
+      document.getElementById('status-msg').classList.add('hidden');
+      
+      if (data.status === "registered") {
+        document.getElementById('main-section').classList.remove('hidden');
+        loadMessages();
+      } else {
+        document.getElementById('register-section').classList.remove('hidden');
+      }
+    } catch (err) {
+      document.getElementById('status-msg').innerText = "驗證過程發生錯誤。";
+    }
+  }
+
+  // 3. 送出註冊資料
+  async function submitRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const errorDiv = document.getElementById('reg-error');
+
+    if (!name || !phone) {
+      errorDiv.innerText = "請填寫完整姓名與電話";
+      return;
+    }
+    
+    errorDiv.innerText = "綁定中，請稍候...";
+    try {
+      const res = await fetch(`${API_URL}?action=register&lineId=${currentLineId}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`);
+      const data = await res.json();
+      
+      if (data.status === "success") {
+        document.getElementById('register-section').classList.add('hidden');
+        document.getElementById('main-section').classList.remove('hidden');
+        loadMessages();
+      } else {
+        errorDiv.innerText = data.message;
+      }
+    } catch (err) {
+      errorDiv.innerText = "網路連線異常，請稍後再試。";
+    }
+  }
+
+  // 4. 讀取未完成訊息
+  async function loadMessages() {
+    const list = document.getElementById('message-list');
+    list.innerHTML = "<div class='loading'>載入資料中...</div>";
+    
+    try {
+      const res = await fetch(`${API_URL}?action=getData`);
+      const data = await res.json();
+      renderList(data);
+    } catch (err) {
+      list.innerHTML = "<div class='error-msg'>載入失敗</div>";
+    }
+  }
+
+  // 5. 渲染訊息清單與打勾功能 (與上一版相同)
   function renderList(data) {
     const list = document.getElementById('message-list');
-    const loading = document.getElementById('loading');
     list.innerHTML = "";
-    loading.style.display = "none";
 
     if (data.length === 0) {
       list.innerHTML = "<p style='text-align:center; color:#888;'>目前沒有待處理的訊息！🎉</p>";
@@ -135,10 +171,8 @@
       card.className = "message-card";
       card.id = `row-${item.row}`;
       
-      // 處理試算表回傳的換行符號或圖片連結公式
       let translationHtml = item.translation;
       if(translationHtml.includes("HYPERLINK")) {
-        // 簡單提取 HYPERLINK 裡的網址
         const match = translationHtml.match(/HYPERLINK\("([^"]+)"/);
         if(match) translationHtml = `<a href="${match[1]}" target="_blank">點此查看圖片</a>`;
       }
@@ -155,20 +189,17 @@
     });
   }
 
-  // 3. 打勾並隱藏
   async function checkRow(row) {
-    // 網頁端先將該卡片淡出並變更文字，提升使用者體驗
     const card = document.getElementById(`row-${row}`);
     const btn = card.querySelector('.check-btn');
     card.style.opacity = "0.5";
     btn.innerText = "處理中...";
-    btn.disabled = true; // 防止連續點擊
+    btn.disabled = true;
 
     try {
-      // 呼叫 API 在試算表打勾
       await fetch(`${API_URL}?action=checkRow&row=${row}`);
-      card.style.display = "none"; // 成功後直接隱藏
-    } catch (error) {
+      card.style.display = "none";
+    } catch (err) {
       alert("更新失敗，請稍後再試。");
       card.style.opacity = "1";
       btn.innerText = "✔ 完成";
@@ -176,8 +207,8 @@
     }
   }
 
-  // 網頁載入時立刻抓資料
-  fetchData();
+  // 啟動系統
+  initLiff();
 </script>
 
 </body>
