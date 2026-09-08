@@ -183,7 +183,7 @@
           <div class="text">${item.message}</div>
           <div class="translation">${translationHtml}</div>
         </div>
-        <button class="check-btn" onclick="checkRow(${item.row})">✔ 完成</button>
+        <button class="check-btn" onclick="checkRow(${item.row})">✔ 既読する</button>
       `;
       list.appendChild(card);
     });
@@ -202,7 +202,7 @@
     } catch (err) {
       alert("更新失敗，請稍後再試。");
       card.style.opacity = "1";
-      btn.innerText = "✔ 完成";
+      btn.innerText = "✔ 既読する";
       btn.disabled = false;
     }
   }
