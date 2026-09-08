@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE 訊息管理後台</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    .message-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+    .message-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .content { flex-grow: 1; }
+    .time { font-size: 0.85em; color: #888; white-space: pre-line; }
+    .text { font-size: 1.1em; margin: 8px 0; font-weight: bold; }
+    .translation { color: #0056b3; font-size: 0.95em; }
+    .check-btn { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1em; }
+    .check-btn:hover { background: #218838; }
+    .loading { text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>待處理訊息清單</h2>
+  <div id="loading" class="loading">載入資料中，請稍候...</div>
+  <div id="message-list"></div>
+</div>
+
+<script>
+  // ================= 替換成你的 GAS 網頁應用程式網址 =================
+    const API_URL = "https://script.google.com/macros/s/AKfycbywNj83P6FrKQBUOIJGZL6UB-847AmsA5EmZKm6aImTUfstIVgQvnXzrObFYeM7O97v/exec"; 
+  // ================================================================
+
+  // 1. 取得資料
+  async function fetchData() {
+    try {
+      const response = await fetch(`${API_URL}?action=getData`);
+      const data = await response.json();
+      renderList(data);
+    } catch (error) {
+      document.getElementById('loading').innerText = "載入失敗，請檢查網址或網路狀態。";
+    }
+  }
+
+  // 2. 渲染畫面
+  function renderList(data) {
+    const list = document.getElementById('message-list');
+    const loading = document.getElementById('loading');
+    list.innerHTML = "";
+    loading.style.display = "none";
+
+    if (data.length === 0) {
+      list.innerHTML = "<p style='text-align:center; color:#888;'>目前沒有待處理的訊息！🎉</p>";
+      return;
+    }
+
+    data.forEach(item => {
+      const card = document.createElement('div');
+      card.className = "message-card";
+      card.id = `row-${item.row}`;
+      
+      // 處理試算表回傳的換行符號或圖片連結公式
+      let translationHtml = item.translation;
+      if(translationHtml.includes("HYPERLINK")) {
+        // 簡單提取 HYPERLINK 裡的網址
+        const match = translationHtml.match(/HYPERLINK\("([^"]+)"/);
+        if(match) translationHtml = `<a href="${match[1]}" target="_blank">點此查看圖片</a>`;
+      }
+
+      card.innerHTML = `
+        <div class="content">
+          <div class="time">${item.time}</div>
+          <div class="text">${item.message}</div>
+          <div class="translation">${translationHtml}</div>
+        </div>
+        <button class="check-btn" onclick="checkRow(${item.row})">✔ 完成</button>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  // 3. 打勾並隱藏
+  async function checkRow(row) {
+    // 網頁端先將該卡片淡出並移除 (提升使用者體驗，不用等伺服器回應)
+    const card = document.getElementById(`row-${row}`);
+    card.style.opacity = "0.5";
+    card.querySelector('.check-btn').innerText = "處理中...";
+
+    try {
+      // 呼叫 API 在試算表打勾
+      await fetch(`${API_URL}?action=checkRow&row=${row}`);
+      card.style.display = "none"; // 成功後直接隱藏
+    } catch (error) {
+      alert("更新失敗，請稍後再試。");
+      card.style.opacity = "1";
+      card.querySelector('.check-btn').innerText = "✔ 完成";
+    }
+  }
+
+  // 網頁載入時立刻抓資料
+  fetchData();
+</script>
+
+</body>
+</html>
