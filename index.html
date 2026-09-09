@@ -217,8 +217,7 @@
       list.appendChild(card);
     });
   }
- // 6. 處理已讀打勾
-  async function checkRow(row) {
+ async function checkRow(row) {
     const card = document.getElementById(`row-${row}`);
     const btn = card.querySelector('.check-btn');
     card.style.opacity = "0.5";
@@ -226,11 +225,10 @@
     btn.disabled = true;
 
     try {
-      // 💡 修正：網址加上 &lineId=${currentLineId}
-      await fetch(`${API_URL}?action=checkRow&row=${row}&lineId=${currentLineId}`);
+      // 💡 修正：加上時間戳記 &t=${new Date().getTime()}
+      await fetch(`${API_URL}?action=checkRow&row=${row}&lineId=${currentLineId}&t=${new Date().getTime()}`);
       card.style.display = "none";
       
-      // 💡 新增：打勾成功後，即時扣除標題上的未讀數量
       const titleElement = document.querySelector('h2');
       if (titleElement && titleElement.innerText.includes('未読')) {
           const match = titleElement.innerText.match(/未読: (\d+)件/);
