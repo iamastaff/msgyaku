@@ -7,37 +7,52 @@
   <!-- 引入 LINE LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-  /* ================= 現代簡約美化風格 ================= */
+    /* ================= 現代簡約美化風格 (進階版) ================= */
     
-    /* 1. 基礎設定與背景 */
+    /* 1. 基礎設定與背景 (新增漸層背景) */
     body { 
       font-family: 'Helvetica Neue', 'Segoe UI', Arial, sans-serif; 
-      background: #f0f2f5; /* 柔和的淺灰藍背景 */
+      /* 清新的微漸層綠色背景，帶有現代質感 */
+      background: linear-gradient(135deg, #d4f0d4 0%, #f0f4f2 100%);
+      background-attachment: fixed; /* 讓背景固定，滑動時不跟著跑 */
       margin: 0; 
       padding: 20px; 
       color: #333;
+      min-height: 100vh;
     }
     
     /* 2. 主容器 */
     .container { 
-      max-width: 700px; /* 稍微縮小寬度，讓文字不會太寬難讀 */
+      max-width: 700px; 
       margin: 0 auto; 
-      background: white; 
+      background: rgba(255, 255, 255, 0.95); /* 微微透明的毛玻璃質感 */
+      backdrop-filter: blur(10px);
       padding: 25px 30px; 
-      border-radius: 16px; /* 更圓的邊角 */
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08); /* 柔和的立體陰影 */
+      border-radius: 16px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
     }
     
-    /* 3. 標題與提示 */
+    /* 3. 標題與提示 (新增 Flex 排版以對齊圖示) */
     h2 { 
-      text-align: center; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px; /* 圖示與文字的間距 */
       color: #1a1a1a; 
       margin-top: 0;
       margin-bottom: 25px;
       font-size: 1.5em;
-      border-bottom: 2px solid #00B900; /* 加入 LINE 綠色的底線裝飾 */
+      border-bottom: 2px solid #00B900; 
       padding-bottom: 15px;
     }
+    
+    /* 標題圖示的顏色設定 */
+    h2 svg {
+      color: #00B900;
+      width: 28px;
+      height: 28px;
+    }
+
     .loading { text-align: center; color: #888; padding: 20px 0; font-size: 1.1em; }
     .hidden { display: none !important; }
 
@@ -55,7 +70,7 @@
     }
     .form-group input:focus {
       outline: none;
-      border-color: #00B900; /* 輸入時邊框變綠色 */
+      border-color: #00B900; 
       box-shadow: 0 0 0 3px rgba(0, 185, 0, 0.1);
     }
     .error-msg { color: #dc3545; text-align: center; margin-top: 12px; font-weight: bold; font-size: 0.9em; }
@@ -71,12 +86,12 @@
       align-items: center; 
       transition: all 0.3s ease; 
       gap: 15px;
-      background: #fafafa;
+      background: #ffffff;
     }
     .message-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      background: white;
-      transform: translateY(-2px); /* 滑鼠游標移過去時會微微浮起 */
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+      transform: translateY(-2px); 
+      border-color: #c3e6c3;
     }
     
     /* 6. 卡片內容文字 */
@@ -92,7 +107,7 @@
       margin: 0 0 10px 0; 
       font-weight: 500; 
       color: #111827; 
-      line-height: 1.5; /* 增加行距讓長文更好讀 */
+      line-height: 1.5; 
     }
     .translation { font-size: 0.95em; }
     .translation a { color: #00B900; text-decoration: none; font-weight: 600; display: inline-block;}
@@ -100,7 +115,7 @@
     /* 7. 圖片預覽優化 */
     .img-preview { 
       max-width: 100%; 
-      max-height: 250px; /* 限制最高高度，避免直式圖片佔滿畫面 */
+      max-height: 250px; 
       border-radius: 8px; 
       margin-top: 8px; 
       box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
@@ -139,13 +154,14 @@
     
     /* 按鈕互動效果 */
     .primary-btn:hover, .check-btn:hover { background: #009900; box-shadow: 0 4px 8px rgba(0, 185, 0, 0.3); }
-    .primary-btn:active, .check-btn:active { transform: scale(0.97); /* 點擊時內縮Ｑ彈效果 */ }
+    .primary-btn:active, .check-btn:active { transform: scale(0.97); }
     .check-btn:disabled { background: #9ca3af; box-shadow: none; cursor: not-allowed; transform: none; }
 
     /* 9. 手機版響應式設計 */
     @media (max-width: 600px) {
       body { padding: 10px; }
       .container { padding: 20px 15px; border-radius: 12px; }
+      h2 { font-size: 1.3em; }
       .message-card { flex-direction: column; align-items: stretch; padding: 15px; }
       .check-btn { width: 100%; padding: 15px; font-size: 1.05em; margin-top: 12px; }
     }
@@ -154,7 +170,13 @@
 <body>
 
 <div class="container">
-  <h2>先生からのメッセージ</h2>
+  <!-- 標題區域：新增了信件/通知的向量圖示 -->
+  <h2 id="page-title">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+    先生からのメッセージ
+  </h2>
   
   <!-- 狀態提示 -->
   <div id="status-msg" class="loading">システムを初期化しています...</div>
@@ -193,7 +215,7 @@
     try {
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) {
-        liff.login(); // 喚起 LINE 登入
+        liff.login(); 
       } else {
         const profile = await liff.getProfile();
         currentLineId = profile.userId;
@@ -204,7 +226,7 @@
     }
   }
 
-  // 2. 驗證身分 (呼叫 GAS 檢查 M 欄)
+  // 2. 驗證身分
   async function verifyUser() {
     document.getElementById('status-msg').innerText = "本人確認中...";
     try {
@@ -258,12 +280,11 @@
     list.innerHTML = "<div class='loading'>データを読み込んでいます...</div>";
     
     try {
-      // 💡 修正：加上時間戳記 &t=${new Date().getTime()} 強迫抓取最新資料
       const res = await fetch(`${API_URL}?action=getData&lineId=${currentLineId}&t=${new Date().getTime()}`);
       const data = await res.json();
       
       const unreadCount = data.length;
-      document.querySelector('h2').innerText = `先生からのメッセージ (未読: ${unreadCount}件)`;
+      updateTitleCount(unreadCount);
 
       renderList(data);
     } catch (err) {
@@ -271,7 +292,18 @@
     }
   }
 
-  // 5. 渲染訊息清單與打勾功能
+  // 獨立出更新標題的函數，保留 SVG 圖示
+  function updateTitleCount(count) {
+    const titleElement = document.getElementById('page-title');
+    titleElement.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      先生からのメッセージ (未読: ${count}件)
+    `;
+  }
+
+  // 5. 渲染訊息清單
   function renderList(data) {
     const list = document.getElementById('message-list');
     list.innerHTML = "";
@@ -286,10 +318,9 @@
       card.className = "message-card";
       card.id = `row-${item.row}`;
       
-      // 💡 修正 1：處理 [object Object] 的問題
       let messageText = item.message;
       if (typeof messageText === 'object' || messageText === "[object Object]") {
-        messageText = "【画像メッセージ】"; // 如果是圖片物件，強制顯示為日文提示文字
+        messageText = "【画像メッセージ】";
       }
       
       let translationHtml = item.translation;
@@ -299,10 +330,8 @@
           const originalUrl = match[1];
           let embedUrl = originalUrl;
           
-          // 💡 修正 2：將 Google Drive 網址轉換為允許外部預覽的 Thumbnail 縮圖格式
           const fileIdMatch = originalUrl.match(/id=([a-zA-Z0-9_-]+)/);
           if (fileIdMatch && fileIdMatch[1]) {
-            // 使用 thumbnail API 並設定寬度為 800px
             embedUrl = `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w800`;
           }
 
@@ -325,7 +354,9 @@
       list.appendChild(card);
     });
   }
- async function checkRow(row) {
+  
+  // 6. 點擊已讀處理
+  async function checkRow(row) {
     const card = document.getElementById(`row-${row}`);
     const btn = card.querySelector('.check-btn');
     card.style.opacity = "0.5";
@@ -333,17 +364,15 @@
     btn.disabled = true;
 
     try {
-      // 💡 修正：加上時間戳記 &t=${new Date().getTime()}
       await fetch(`${API_URL}?action=checkRow&row=${row}&lineId=${currentLineId}&t=${new Date().getTime()}`);
       card.style.display = "none";
       
-      const titleElement = document.querySelector('h2');
-      if (titleElement && titleElement.innerText.includes('未読')) {
-          const match = titleElement.innerText.match(/未読: (\d+)件/);
-          if (match) {
-              const newCount = Math.max(0, parseInt(match[1]) - 1);
-              titleElement.innerText = `先生からのメッセージ (未読: ${newCount}件)`;
-          }
+      // 動態抓取目前的數字並減一，保留 SVG 圖示
+      const titleElement = document.getElementById('page-title');
+      const match = titleElement.innerText.match(/未読: (\d+)件/);
+      if (match) {
+          const newCount = Math.max(0, parseInt(match[1]) - 1);
+          updateTitleCount(newCount);
       }
     } catch (err) {
       alert("更新に失敗しました。後でもう一度お試しください。");
