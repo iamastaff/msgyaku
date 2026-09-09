@@ -173,15 +173,29 @@
       card.className = "message-card";
       card.id = `row-${item.row}`;
       
+      // 💡 修正 1：處理 [object Object] 的問題
+      let messageText = item.message;
+      if (typeof messageText === 'object' || messageText === "[object Object]") {
+        messageText = "【画像メッセージ】"; // 如果是圖片物件，強制顯示為日文提示文字
+      }
+      
       let translationHtml = item.translation;
       if(translationHtml.includes("HYPERLINK")) {
         const match = translationHtml.match(/HYPERLINK\("([^"]+)"/);
         if(match) {
-          const imageUrl = match[1];
-          // 💡 改為：直接使用 img 標籤顯示圖片，點擊圖片時依然可以開新分頁看大圖
+          const originalUrl = match[1];
+          let embedUrl = originalUrl;
+          
+          // 💡 修正 2：將 Google Drive 網址轉換為允許外部預覽的 Thumbnail 縮圖格式
+          const fileIdMatch = originalUrl.match(/id=([a-zA-Z0-9_-]+)/);
+          if (fileIdMatch && fileIdMatch[1]) {
+            // 使用 thumbnail API 並設定寬度為 800px
+            embedUrl = `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w800`;
+          }
+
           translationHtml = `
-            <a href="${imageUrl}" target="_blank">
-              <img src="${imageUrl}" class="img-preview" alt="アップロードされた画像">
+            <a href="${originalUrl}" target="_blank">
+              <img src="${embedUrl}" class="img-preview" alt="アップロードされた画像" onerror="this.style.display='none';">
             </a>
           `;
         }
@@ -190,7 +204,7 @@
       card.innerHTML = `
         <div class="content">
           <div class="time">${item.time}</div>
-          <div class="text">${item.message}</div>
+          <div class="text">${messageText}</div>
           <div class="translation">${translationHtml}</div>
         </div>
         <button class="check-btn" onclick="checkRow(${item.row})">✔ 既読する</button>
@@ -198,7 +212,6 @@
       list.appendChild(card);
     });
   }
-
   async function checkRow(row) {
     const card = document.getElementById(`row-${row}`);
     const btn = card.querySelector('.check-btn');
