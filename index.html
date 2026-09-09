@@ -150,11 +150,10 @@
     list.innerHTML = "<div class='loading'>データを読み込んでいます...</div>";
     
     try {
-      // 💡 修正：網址加上 &lineId=${currentLineId}
-      const res = await fetch(`${API_URL}?action=getData&lineId=${currentLineId}`);
+      // 💡 修正：加上時間戳記 &t=${new Date().getTime()} 強迫抓取最新資料
+      const res = await fetch(`${API_URL}?action=getData&lineId=${currentLineId}&t=${new Date().getTime()}`);
       const data = await res.json();
       
-      // 💡 新增：動態更新未讀數量標題
       const unreadCount = data.length;
       document.querySelector('h2').innerText = `先生からのメッセージ (未読: ${unreadCount}件)`;
 
