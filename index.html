@@ -152,6 +152,14 @@
     try {
       const res = await fetch(`${API_URL}?action=getData`);
       const data = await res.json();
+      
+      // 💡 新增：計算未讀訊息數量並更新標題
+      const unreadCount = data.length;
+      const titleElement = document.querySelector('h2');
+      if (titleElement) {
+         titleElement.innerText = `先生からのメッセージ (未読: ${unreadCount}件)`;
+      }
+
       renderList(data);
     } catch (err) {
       list.innerHTML = "<div class='error-msg'>読み込みに失敗しました。</div>";
@@ -222,6 +230,19 @@
     try {
       await fetch(`${API_URL}?action=checkRow&row=${row}`);
       card.style.display = "none";
+      
+      // 💡 新增：打勾成功後，即時更新未讀數量
+      const titleElement = document.querySelector('h2');
+      if (titleElement && titleElement.innerText.includes('未読')) {
+          const currentText = titleElement.innerText;
+          const match = currentText.match(/未読: (\d+)件/);
+          if (match) {
+              const currentCount = parseInt(match[1]);
+              const newCount = Math.max(0, currentCount - 1);
+              titleElement.innerText = `先生からのメッセージ (未読: ${newCount}件)`;
+          }
+      }
+
     } catch (err) {
       alert("更新に失敗しました。後でもう一度お試しください。");
       card.style.opacity = "1";
