@@ -112,15 +112,33 @@
     .translation { font-size: 0.95em; }
     .translation a { color: #00B900; text-decoration: none; font-weight: 600; display: inline-block;}
     
-    /* 7. 圖片預覽優化 */
-    .img-preview { 
-      max-width: 100%; 
-      max-height: 250px; 
-      border-radius: 8px; 
-      margin-top: 8px; 
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
-      object-fit: contain;
+    /* 7. 圖片與翻轉按鈕設計 */
+    .img-container {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      margin-top: 8px;
     }
+    .img-preview { 
+      max-width: 100%; max-height: 250px; border-radius: 8px; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); object-fit: contain;
+      transition: transform 0.3s ease; /* 加入平滑旋轉動畫 */
+      display: block;
+    }
+    /* 旋轉按鈕樣式 */
+    .rotate-btn {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white; border: none; border-radius: 50%;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: background 0.2s, transform 0.2s;
+      z-index: 10;
+    }
+    .rotate-btn:hover { background: rgba(0, 0, 0, 0.8); transform: scale(1.1); }
+    .rotate-btn svg { width: 20px; height: 20px; }
 
     /* 8. 按鈕共用與個別設計 */
     .primary-btn, .check-btn { 
@@ -335,10 +353,18 @@
             embedUrl = `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w800`;
           }
 
+          // 💡 替換這裡：加入 img-container 結構與獨立的旋轉按鈕
           translationHtml = `
-            <a href="${originalUrl}" target="_blank">
-              <img src="${embedUrl}" class="img-preview" alt="アップロードされた画像" onerror="this.style.display='none';">
-            </a>
+            <div class="img-container">
+              <a href="${originalUrl}" target="_blank">
+                <img id="img-${item.row}" src="${embedUrl}" class="img-preview" alt="アップロードされた画像" onerror="this.style.display='none';" data-angle="0">
+              </a>
+              <button class="rotate-btn" onclick="rotateImg('img-${item.row}', event)" title="回転">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
           `;
         }
       }
@@ -353,6 +379,21 @@
       `;
       list.appendChild(card);
     });
+  }
+
+  // 💡 新增：翻轉圖片功能 (每次點擊旋轉 90 度)
+  function rotateImg(imgId, event) {
+    event.preventDefault();   // 防止觸發 <a> 標籤開啟原圖網頁
+    event.stopPropagation();
+    
+    const img = document.getElementById(imgId);
+    if (!img) return;
+    
+    let currentAngle = parseInt(img.getAttribute('data-angle')) || 0;
+    currentAngle = (currentAngle + 90) % 360; // 每次加 90 度
+    
+    img.setAttribute('data-angle', currentAngle);
+    img.style.transform = `rotate(${currentAngle}deg)`;
   }
   
   // 6. 點擊已讀處理
