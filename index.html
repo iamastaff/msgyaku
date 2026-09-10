@@ -122,7 +122,8 @@
     .img-preview { 
       max-width: 100%; max-height: 250px; border-radius: 8px; 
       box-shadow: 0 2px 6px rgba(0,0,0,0.1); object-fit: contain;
-      transition: transform 0.3s ease; /* 加入平滑旋轉動畫 */
+      /* 💡 修改下面這一行：加入 margin 0.3s ease 讓空間撐開時平滑不跳動 */
+      transition: transform 0.3s ease, margin 0.3s ease; 
       display: block;
     }
     /* 旋轉按鈕樣式 */
@@ -381,7 +382,7 @@
     });
   }
 
-  // 💡 新增：翻轉圖片功能 (每次點擊旋轉 90 度)
+  // 💡 翻轉圖片功能 (每次點擊旋轉 90 度，並自動修正排版)
   function rotateImg(imgId, event) {
     event.preventDefault();   // 防止觸發 <a> 標籤開啟原圖網頁
     event.stopPropagation();
@@ -390,10 +391,26 @@
     if (!img) return;
     
     let currentAngle = parseInt(img.getAttribute('data-angle')) || 0;
-    currentAngle = (currentAngle + 90) % 360; // 每次加 90 度
-    
+    currentAngle = (currentAngle + 90) % 360;
     img.setAttribute('data-angle', currentAngle);
+    
+    // 執行旋轉
     img.style.transform = `rotate(${currentAngle}deg)`;
+    
+    // 💡 修正破版問題：動態撐開上下空間
+    if (currentAngle === 90 || currentAngle === 270) {
+      // 計算寬高差異，除以 2 就是上下各自需要增加的留白空間
+      const diff = (img.offsetWidth - img.offsetHeight) / 2;
+      if (diff > 0) {
+        // 如果是橫圖，加上 margin 來把外框撐高
+        img.style.marginTop = `${diff}px`;
+        img.style.marginBottom = `${diff}px`;
+      }
+    } else {
+      // 轉回 0 或 180 度時，將留白歸零
+      img.style.marginTop = "0px";
+      img.style.marginBottom = "0px";
+    }
   }
   
   // 6. 點擊已讀處理
