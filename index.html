@@ -382,13 +382,22 @@
     });
   }
 
-  // 💡 翻轉圖片功能 (每次點擊旋轉 90 度，並自動修正排版)
+  // 💡 翻轉圖片功能 (每次點擊旋轉 90 度，並自動修正上下與左右對齊)
   function rotateImg(imgId, event) {
     event.preventDefault();   // 防止觸發 <a> 標籤開啟原圖網頁
     event.stopPropagation();
     
     const img = document.getElementById(imgId);
     if (!img) return;
+    
+    // 記住圖片最初始的寬高，避免因 margin 改變而影響後續的對齊計算
+    if (!img.hasAttribute('data-orig-width')) {
+      img.setAttribute('data-orig-width', img.offsetWidth);
+      img.setAttribute('data-orig-height', img.offsetHeight);
+    }
+    
+    const origW = parseFloat(img.getAttribute('data-orig-width'));
+    const origH = parseFloat(img.getAttribute('data-orig-height'));
     
     let currentAngle = parseInt(img.getAttribute('data-angle')) || 0;
     currentAngle = (currentAngle + 90) % 360;
@@ -397,19 +406,23 @@
     // 執行旋轉
     img.style.transform = `rotate(${currentAngle}deg)`;
     
-    // 💡 修正破版問題：動態撐開上下空間
+    // 💡 修正破版與左側對齊問題：計算圖片原本寬高差，動態補齊空間
     if (currentAngle === 90 || currentAngle === 270) {
-      // 計算寬高差異，除以 2 就是上下各自需要增加的留白空間
-      const diff = (img.offsetWidth - img.offsetHeight) / 2;
-      if (diff > 0) {
-        // 如果是橫圖，加上 margin 來把外框撐高
-        img.style.marginTop = `${diff}px`;
-        img.style.marginBottom = `${diff}px`;
-      }
+      const diff = (origW - origH) / 2;
+      
+      // 撐開上下空間防止蓋住文字
+      img.style.marginTop = `${diff}px`;
+      img.style.marginBottom = `${diff}px`;
+      
+      // 利用 margin 抵銷旋轉後的視覺位移，強迫左側邊線保持在原位
+      img.style.marginLeft = `${-diff}px`;
+      img.style.marginRight = `${-diff}px`;
     } else {
-      // 轉回 0 或 180 度時，將留白歸零
+      // 轉回 0 或 180 度時，將所有留白歸零
       img.style.marginTop = "0px";
       img.style.marginBottom = "0px";
+      img.style.marginLeft = "0px";
+      img.style.marginRight = "0px";
     }
   }
   
