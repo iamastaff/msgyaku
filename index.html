@@ -386,7 +386,7 @@
     });
   }
 
-  // 💡 翻轉圖片功能 (每次點擊旋轉 90 度，並自動修正上下與左右對齊)
+  // 💡 翻轉圖片功能 (每次點擊旋轉 90 度，並自動縮放對齊寬度)
   function rotateImg(imgId, event) {
     event.preventDefault();   // 防止觸發 <a> 標籤開啟原圖網頁
     event.stopPropagation();
@@ -394,7 +394,7 @@
     const img = document.getElementById(imgId);
     if (!img) return;
     
-    // 記住圖片最初始的寬高，避免因 margin 改變而影響後續的對齊計算
+    // 記住圖片最初始的寬高
     if (!img.hasAttribute('data-orig-width')) {
       img.setAttribute('data-orig-width', img.offsetWidth);
       img.setAttribute('data-orig-height', img.offsetHeight);
@@ -407,22 +407,27 @@
     currentAngle = (currentAngle + 90) % 360;
     img.setAttribute('data-angle', currentAngle);
     
-    // 執行旋轉
-    img.style.transform = `rotate(${currentAngle}deg)`;
-    
-    // 💡 修正破版與左側對齊問題：計算圖片原本寬高差，動態補齊空間
+    // 💡 核心修正：當旋轉為直式時，計算縮放比例 (Scale)
     if (currentAngle === 90 || currentAngle === 270) {
-      const diff = (origW - origH) / 2;
+      // 讓旋轉後的視覺寬度，強迫等於原本的 100% 寬度
+      const scale = origW / origH; 
       
-      // 撐開上下空間防止蓋住文字
+      // 同時套用旋轉與縮放
+      img.style.transform = `rotate(${currentAngle}deg) scale(${scale})`;
+      
+      // 縮放後高度會跟著改變，計算新的視覺高度來撐開上下空間
+      const newVisualHeight = origW * scale; 
+      const diff = (newVisualHeight - origH) / 2;
+      
       img.style.marginTop = `${diff}px`;
       img.style.marginBottom = `${diff}px`;
       
-      // 利用 margin 抵銷旋轉後的視覺位移，強迫左側邊線保持在原位
-      img.style.marginLeft = `${-diff}px`;
-      img.style.marginRight = `${-diff}px`;
+      // 寬度已經完美吻合，不需要左右邊距補償了
+      img.style.marginLeft = "0px";
+      img.style.marginRight = "0px";
     } else {
-      // 轉回 0 或 180 度時，將所有留白歸零
+      // 轉回 0 或 180 度時，恢復原本比例 (scale: 1) 與留白
+      img.style.transform = `rotate(${currentAngle}deg) scale(1)`;
       img.style.marginTop = "0px";
       img.style.marginBottom = "0px";
       img.style.marginLeft = "0px";
